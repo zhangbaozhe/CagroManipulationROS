@@ -1,0 +1,20 @@
+blue:
+  hmax: 245
+  hmin: 190
+green:
+  hmax: 190
+  hmin: 100
+image:
+  ROI_height: 480
+  ROI_wdith: 640
+  ROI_x: 0
+  ROI_y: 0
+  reg_x:
+  - -0.0007527183725875697
+  - 0.39768446816193875
+  reg_y:
+  - -0.0006607507660878448
+  - 0.21417198672114407
+red:
+  hmax: 30
+  hmin: 0
