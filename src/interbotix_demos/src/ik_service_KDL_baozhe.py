@@ -57,15 +57,14 @@ if __name__ == '__main__':
     rospy.init_node('ik_service_demo', anonymous=True)
 
     ik_solver = GetIK("interbotix_arm")
-    ITER_NUM = 1000
+    ITER_NUM = 100
     average_time = 0.0
     success_rate = 0.0
-    search_resolution = rospy.get_param("/wx250s/robot_description_kinematics/interbotix_arm/kinematics_solver_search_resolution")
 
-    for step in range(201):
+    # 0.005 -> 1
+    for step in range(1, 201):
         search_resolution = step * 0.005
         rospy.set_param("/wx250s/robot_description_kinematics/interbotix_arm/kinematics_solver_search_resolution", search_resolution)
-        print(rospy.get_param("/wx250s/robot_description_kinematics/interbotix_arm/kinematics_solver_search_resolution"))
         for i in range(ITER_NUM):
             target = PoseStamped()
             target.header.stamp = rospy.Time.now()
@@ -96,4 +95,4 @@ if __name__ == '__main__':
         print("SUCCESS RATE:", success_rate)
         print(search_resolution)
         with open("exp2_log_KDL.csv", mode='a') as file:
-            file.write(f"{search_resolution}, {average_time}, {success_rate}")
+            file.write(f"{search_resolution}, {average_time}, {success_rate}\n")
