@@ -3,3 +3,4 @@ build/
 *.zip
 *.mp4
 .catkin_workspace
+.vscode/
