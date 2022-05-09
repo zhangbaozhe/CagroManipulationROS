@@ -3,7 +3,7 @@
 
 import rospy, sys
 import moveit_commander
-from geometry_msg.msg import PoseStamped, Pose
+from geometry_msgs.msg import PoseStamped, Pose
 
 
 def main():
@@ -50,7 +50,7 @@ def main():
 
     # let the robot arm to the initial point
     # step 1
-    rospy.info("In step 1")
+    rospy.loginfo("In step 1")
     arm.set_named_target('Home')
     arm.go()
     rospy.sleep(1)
@@ -59,7 +59,7 @@ def main():
     # let the arm move above the target object and open the gripper
     # target pose [0.3, 0.0, 0.0]
     # target size [0.05, 0.05, 0.05]
-    rospy.info("In step 2")
+    rospy.loginfo("In step 2")
     target_pose = PoseStamped()
     target_pose.header.frame_id = reference_frame
     target_pose.header.stamp = rospy.Time.now()     
@@ -83,13 +83,13 @@ def main():
 
     # step 3
     # move to the grasping position
-    rospy.info("In step 3")
+    rospy.loginfo("In step 3")
     target_pose = PoseStamped()
     target_pose.header.frame_id = reference_frame
     target_pose.header.stamp = rospy.Time.now()     
-    target_pose.pose.position.x = 0.3
+    target_pose.pose.position.x = 0.23
     target_pose.pose.position.y = 0
-    target_pose.pose.position.z = 0.05
+    target_pose.pose.position.z = 0.02
     target_pose.pose.orientation.w = 1.0
 
     # set the current state as the start state
@@ -107,15 +107,18 @@ def main():
 
     # step 4
     # close the gripper
-    rospy.info("In step 4")
-    gripper.set_named_target('Closed')
+    rospy.loginfo("In step 4")
+    # gripper.set_named_target('Closed')
+    joinnt_positions = [0.03375, -0.03375]  # TODO: force to move?
+
+    gripper.set_joint_value_target(joinnt_positions)
     gripper.go()
     rospy.sleep(1)
 
 
     # step 5
     # move above
-    rospy.info("In step 5")
+    rospy.loginfo("In step 5")
     target_pose = PoseStamped()
     target_pose.header.frame_id = reference_frame
     target_pose.header.stamp = rospy.Time.now()     
@@ -141,16 +144,19 @@ def main():
 
     # step 6
     # open the gripper
-    rospy.info("In step 6")
+    rospy.loginfo("In step 6")
     gripper.set_named_target('Open')
     gripper.go()
     rospy.sleep(1)
 
-    # step 6
-    rospy.info("In step 6")
+    # step 7
+    rospy.loginfo("In step 7")
     arm.set_named_target('Home')
     arm.go()
     rospy.sleep(1)
+
+    moveit_commander.roscpp_shutdown()
+    moveit_commander.os._exit(0)
 
 
 
