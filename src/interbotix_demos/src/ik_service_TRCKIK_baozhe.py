@@ -57,7 +57,7 @@ if __name__ == '__main__':
     rospy.init_node('ik_service_demo', anonymous=True)
 
     ik_solver = GetIK("interbotix_arm")
-    ITER_NUM = 1000
+    ITER_NUM = 100
     average_time = 0.0
     success_rate = 0.0
 # 0.005 -> 1
