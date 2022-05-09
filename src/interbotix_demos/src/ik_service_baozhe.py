@@ -57,7 +57,7 @@ if __name__ == '__main__':
     rospy.init_node('ik_service_demo', anonymous=True)
 
     ik_solver = GetIK("interbotix_arm")
-    ITER_NUM = 100
+    ITER_NUM = 1000
     average_time = 0.0
     success_rate = 0.0
 
@@ -65,12 +65,12 @@ if __name__ == '__main__':
         target = PoseStamped()
         target.header.stamp = rospy.Time.now()
 
-        target.pose.position.x = random.uniform(0.5, 1.0)
-        target.pose.position.y = random.uniform(0.5, 1.0)
-        target.pose.position.z =  random.uniform(0.5, 1.0)
-        target.pose.orientation.x = random.uniform(0.5, 1.0)
-        target.pose.orientation.y = random.uniform(0.5, 1.0)
-        target.pose.orientation.z = random.uniform(0.5, 1.0)
+        target.pose.position.x = random.uniform(0.0, 0.5)
+        target.pose.position.y = random.uniform(0.0, 0.5)
+        target.pose.position.z =  random.uniform(0.0, 0.5)
+        target.pose.orientation.x = random.uniform(-0.5, 0.5)
+        target.pose.orientation.y = random.uniform(-0.5, 0.5)
+        target.pose.orientation.z = random.uniform(-0.5, 0.5)
         target.pose.orientation.w = 1.
 
         t_start = rospy.Time.now()
