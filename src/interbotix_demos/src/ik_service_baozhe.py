@@ -89,3 +89,5 @@ if __name__ == '__main__':
     success_rate /= ITER_NUM
     print("AVG TIME:", average_time)
     print("SUCCESS RATE:", success_rate)
+    with open("exp2_log.csv", mode='a') as f:
+        f.write(f"{average_time}, {success_rate}")
