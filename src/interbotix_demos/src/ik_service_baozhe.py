@@ -57,24 +57,35 @@ if __name__ == '__main__':
     rospy.init_node('ik_service_demo', anonymous=True)
 
     ik_solver = GetIK("interbotix_arm")
+    ITER_NUM = 100
+    average_time = 0.0
+    success_rate = 0.0
+
+    for i in range(ITER_NUM):
+        target = PoseStamped()
+        target.header.stamp = rospy.Time.now()
+
+        target.pose.position.x = random.uniform(0.5, 1.0)
+        target.pose.position.y = random.uniform(0.5, 1.0)
+        target.pose.position.z =  random.uniform(0.5, 1.0)
+        target.pose.orientation.x = random.uniform(0.5, 1.0)
+        target.pose.orientation.y = random.uniform(0.5, 1.0)
+        target.pose.orientation.z = random.uniform(0.5, 1.0)
+        target.pose.orientation.w = 1.
+
+        t_start = rospy.Time.now()
+        res = ik_solver.get_ik(target)
+        if res.error_code.val == 1:
+            success_rate += 1
+            print("Success")
+        else:
+            print("Failed")
+            print(res)
+        time_cost = (rospy.Time.now()-t_start).to_sec()/1000.
+        average_time += time_cost
+        print("Time cost:", time_cost, "ms")
     
-    target = PoseStamped()
-    target.header.stamp = rospy.Time.now()
-
-    target.pose.position.x = 0.24
-    target.pose.position.y = 0.06
-    target.pose.position.z =  0.15
-    target.pose.orientation.x = 0.
-    target.pose.orientation.y = 0.
-    target.pose.orientation.z = 0.
-    target.pose.orientation.w = 1.
-
-    t_start = rospy.Time.now()
-    res = ik_solver.get_ik(target)
-    if res.error_code.val == 1:
-        print("Success")
-    else:
-        print("Failed")
-        print(res)
-
-    print("Time cost:", (rospy.Time.now()-t_start).to_sec()/1000., "ms")
+    average_time /= ITER_NUM
+    success_rate /= ITER_NUM
+    print("AVG TIME:", average_time)
+    print("SUCCESS RATE:", success_rate)
