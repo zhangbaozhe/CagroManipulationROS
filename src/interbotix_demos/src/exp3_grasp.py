@@ -40,8 +40,8 @@ def main():
     gripper.set_goal_joint_tolerance(0.001)
 
     # set max velocity and acceleration
-    gripper.set_max_acceleration_scaling_factor(0.5)
-    gripper.set_max_velocity_scaling_factor(0.5)
+    gripper.set_max_acceleration_scaling_factor(0.3)
+    gripper.set_max_velocity_scaling_factor(0.3)
 
     # open the gripper
     gripper.set_named_target('Open')
@@ -89,7 +89,7 @@ def main():
     target_pose.header.stamp = rospy.Time.now()     
     target_pose.pose.position.x = 0.23
     target_pose.pose.position.y = 0
-    target_pose.pose.position.z = 0.02
+    target_pose.pose.position.z = 0.15
     target_pose.pose.orientation.w = 1.0
 
     # set the current state as the start state
@@ -108,10 +108,10 @@ def main():
     # step 4
     # close the gripper
     rospy.loginfo("In step 4")
-    # gripper.set_named_target('Closed')
-    joinnt_positions = [0.03375, -0.03375]  # TODO: force to move?
+    gripper.set_named_target('Closed')
+    # joinnt_positions = [0.03375, -0.03375]  # TODO: force to move?
 
-    gripper.set_joint_value_target(joinnt_positions)
+    # gripper.set_joint_value_target(joinnt_positions)
     gripper.go()
     rospy.sleep(1)
 
