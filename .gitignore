@@ -2,5 +2,6 @@ devel/
 build/
 *.zip
 *.mp4
+*.mkv
 .catkin_workspace
 .vscode/
