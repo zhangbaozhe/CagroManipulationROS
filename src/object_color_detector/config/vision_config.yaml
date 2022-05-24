@@ -18,3 +18,6 @@ image:
 red:
   hmax: 30
   hmin: 0
+yellow: 
+  hmax: 60
+  hmin: 40
