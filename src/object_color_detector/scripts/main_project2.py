@@ -145,6 +145,12 @@ def pickPlaceCallBack(req):
     except: 
         return PickPlaceSrvResponse(False)
 
+def cameraPointTransformToWorld(x_cam, y_cam, x_yellow, y_yellow, width_yellow, height_yellow):
+    pass
+    # TODO: todo
+
+
+
 
 def timerCommandCallBack(event):
     global TASK_STACK, ARM, GRIPPER
@@ -155,12 +161,10 @@ def timerCommandCallBack(event):
         TASK_STACK.append(TASK_HOLD)
 
     if TASK_STACK[0] == TASK_HOLD:
+        # on this mode, we can do the detection
         res = OBJECT_COLOR_DETECT(0)
         print(res)
-        RED_OBJ_STACK = res.redObjList
-        BLUE_OBJ_STACK = res.blueObjList
-        GREEN_OBJ_STACK = res.greenObjList
-        # TODO: todo 
+
 
 
 
