@@ -4,7 +4,8 @@
 int32 RED_OBJECT    = 0
 int32 GREEN_OBJECT  = 1
 int32 BLUE_OBJECT   = 2
-int32 BLACK_OBJECT  = 3
+int32 YELLOW_OBJECT = 3
+int32 BLACK_OBJECT  = 4
 
 int32 ALL_OBJECT    = 255
 
@@ -26,4 +27,9 @@ int32 result
 geometry_msgs/Pose[] redObjList
 geometry_msgs/Pose[] greenObjList
 geometry_msgs/Pose[] blueObjList
+geometry_msgs/Pose[] yellowObjList
+int32 yellowRectX
+int32 yellowRectY
+int32 yellowRectXWidth
+int32 yellowRectYHeight
 geometry_msgs/Pose[] blackObjList

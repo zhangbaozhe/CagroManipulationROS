@@ -1,0 +1,14 @@
+# The pick & place service enables the user to send a 
+# target position to the robot.
+
+# request target position
+geometry_msgs/PoseStamped targetPose
+
+# request target color 
+# red -> 0, green -> 1, blue -> 1
+uint8 color
+
+---
+
+# reponse status
+bool result
