@@ -146,8 +146,10 @@ def pickPlaceCallBack(req):
         return PickPlaceSrvResponse(False)
 
 def cameraPointTransformToWorld(x_cam, y_cam, x_yellow, y_yellow, width_yellow, height_yellow):
-    pass
-    # TODO: todo
+    # transform from the camera pixel to the real world coordinates
+    y_world = 0.15 - (x_cam - x_yellow) / width_yellow * 0.3
+    x_world = 0.31 - (y_cam - y_yellow) / height_yellow * 0.18
+    return (x_world, y_world)
 
 
 
@@ -157,13 +159,118 @@ def timerCommandCallBack(event):
     global OBJECT_COLOR_DETECT, PICK_PLACE
     global RED_OBJ_STACK, BLUE_OBJ_STACK, GREEN_OBJ_STACK
 
-    if len(TASK_STACK) == 0:
+    if len(TASK_STACK) == 0 and len(RED_OBJ_STACK) == 0 and \
+        len(GREEN_OBJ_STACK) == 0 and len(BLUE_OBJ_STACK) == 0:
         TASK_STACK.append(TASK_HOLD)
 
     if TASK_STACK[0] == TASK_HOLD:
         # on this mode, we can do the detection
         res = OBJECT_COLOR_DETECT(0)
         print(res)
+        x_yellow = res.yellowRectX
+        y_yellow = res.yellowRectY
+        width_yellow = res.yellowRectXWidth
+        height_yellow = res.yellowRectYHeight
+        if width_yellow == 0 or height_yellow == 0:
+            return
+
+        for pose in res.redObjList:
+            x_world, y_world = \
+                cameraPointTransformToWorld(
+                    pose.position.x, 
+                    pose.position.y, 
+                    x_yellow, 
+                    y_yellow, 
+                    width_yellow, 
+                    height_yellow)
+            temp_pose = PoseStamped()
+            temp_pose.header.frame_id = REFERENCE_FRAME
+            temp_pose.header.stamp = rospy.Time.now()
+            temp_pose.pose.position.x = x_world
+            temp_pose.pose.position.y = y_world
+            temp_pose.pose.position.z = 0.075
+            temp_pose.pose.orientation.w = 0.7071068
+            temp_pose.pose.orientation.y = 0.7071068
+            RED_OBJ_STACK.append(temp_pose)
+
+        for pose in res.greenObjList:
+            x_world, y_world = \
+                cameraPointTransformToWorld(
+                    pose.position.x, 
+                    pose.position.y, 
+                    x_yellow, 
+                    y_yellow, 
+                    width_yellow, 
+                    height_yellow)
+            temp_pose = PoseStamped()
+            temp_pose.header.frame_id = REFERENCE_FRAME
+            temp_pose.header.stamp = rospy.Time.now()
+            temp_pose.pose.position.x = x_world
+            temp_pose.pose.position.y = y_world
+            temp_pose.pose.position.z = 0.075
+            temp_pose.pose.orientation.w = 0.7071068
+            temp_pose.pose.orientation.y = 0.7071068
+            GREEN_OBJ_STACK.append(temp_pose)
+
+        for pose in res.blueObjList:
+            x_world, y_world = \
+                cameraPointTransformToWorld(
+                    pose.position.x, 
+                    pose.position.y, 
+                    x_yellow, 
+                    y_yellow, 
+                    width_yellow, 
+                    height_yellow)
+            temp_pose = PoseStamped()
+            temp_pose.header.frame_id = REFERENCE_FRAME
+            temp_pose.header.stamp = rospy.Time.now()
+            temp_pose.pose.position.x = x_world
+            temp_pose.pose.position.y = y_world
+            temp_pose.pose.position.z = 0.075
+            temp_pose.pose.orientation.w = 0.7071068
+            temp_pose.pose.orientation.y = 0.7071068
+            BLUE_OBJ_STACK.append(temp_pose)
+        
+        # detection done
+        TASK_STACK.pop()
+        TASK_STACK.append(TASK_SORT)
+        return 
+
+    if TASK_STACK[0] == TASK_SORT:
+        if len(RED_OBJ_STACK) == 0 and \
+        len(GREEN_OBJ_STACK) == 0 and len(BLUE_OBJ_STACK) == 0:
+            # no target
+            rospy.logwarn("In SORT mode, but no target")
+            TASK_STACK.pop()
+            return
+        
+        # first do the red part
+        for target in RED_OBJ_STACK:
+            # 0 for red
+            status = PICK_PLACE(target, 0)
+            if not status:
+                rospy.logerr("Error")
+
+        for target in GREEN_OBJ_STACK:
+            status = PICK_PLACE(target, 1)
+            if not status:
+                rospy.logerr("Error")
+        
+        for target in BLUE_OBJ_STACK:
+            status = PICK_PLACE(target, 2)
+            if not status:
+                rospy.logerr("Error")
+        
+        # done 
+        RED_OBJ_STACK = []
+        GREEN_OBJ_STACK = []
+        BLUE_OBJ_STACK = []
+        TASK_STACK.pop()
+        return
+
+        
+        
+
 
 
 
@@ -213,15 +320,15 @@ def main():
     ARM.set_goal_orientation_tolerance(0.001)
     
     # set max velocity and accelation
-    ARM.set_max_acceleration_scaling_factor(0.5)
-    ARM.set_max_velocity_scaling_factor(0.5)
+    ARM.set_max_acceleration_scaling_factor(1.0)
+    ARM.set_max_velocity_scaling_factor(1.0)
 
     # set gripper error
     GRIPPER.set_goal_joint_tolerance(0.001)
 
     # set max velocity and acceleration
-    GRIPPER.set_max_acceleration_scaling_factor(0.3)
-    GRIPPER.set_max_velocity_scaling_factor(0.3)
+    GRIPPER.set_max_acceleration_scaling_factor(1.0)
+    GRIPPER.set_max_velocity_scaling_factor(1.0)
 
     # open the gripper
     GRIPPER.set_named_target('Open')
@@ -234,9 +341,11 @@ def main():
     rospy.sleep(0.5)
 
     pick_place_service = rospy.Service('pick_place', PickPlaceSrv, pickPlaceCallBack)
+
+    rospy.wait_for_service('pick_place')
     PICK_PLACE = rospy.ServiceProxy('pick_place', PickPlaceSrv)
 
-    rospy.Timer(rospy.Duration(4), timerCommandCallBack)
+    rospy.Timer(rospy.Duration(1), timerCommandCallBack)
     rospy.spin()
 
     moveit_commander.roscpp_shutdown()
