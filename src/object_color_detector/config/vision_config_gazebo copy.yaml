@@ -1,9 +1,9 @@
 blue:
-  hmax: 290
-  hmin: 150
+  hmax: 360
+  hmin: 130
 green:
-  hmax: 160
-  hmin: 80
+  hmax: 200
+  hmin: 70
 image:
   ROI_height: 480
   ROI_wdith: 640
@@ -19,5 +19,5 @@ red:
   hmax: 30
   hmin: 0
 yellow: 
-  hmax: 70
-  hmin: 50
+  hmax: 60
+  hmin: 40
