@@ -19,6 +19,13 @@ TASK_STACK = []
 TASK_HOLD = 0
 TASK_SORT = 1
 
+
+# Global camera parameters
+K1 = 0
+K2 = 0
+B1 = 0
+B2 = 0
+
 TARGET_POSITIONS = {
     "A": (0.30, 0.00, 0.75),
     "B": (0.22, -0.10, 0.75),
@@ -284,9 +291,12 @@ def timerCommandCallBack(event):
 def main():
     global ARM, GRIPPER, GRIPPER_PUB, REFERENCE_FRAME, END_EFFECTOR_LINK
     global OBJECT_COLOR_DETECT, PICK_PLACE
+    global K1, K2, B1, B2
 
     moveit_commander.roscpp_initialize(sys.argv)
     rospy.init_node("warehouse_sort")
+    K1 = rospy.get_param()
+
     ARM = moveit_commander.MoveGroupCommander("interbotix_arm")
     GRIPPER = moveit_commander.MoveGroupCommander("interbotix_gripper")
 

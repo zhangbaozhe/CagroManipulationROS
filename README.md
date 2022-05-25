@@ -38,7 +38,7 @@ The robot arm is equipped with a camera which can produce 640x480 images. With t
 
 ## Solution
 **Detection of the yellow picking area** 
-Given the node of detecting the colors of the cubes, we may add another color, yellow, for detecting the picking area. The correct detection of the yellow picking area can help the camera on the robot arm obtain the relative positions of the cubes on the picking area, and further calculate the coordinates at the world frame. 
+Given the node of detecting the colors of the cubes, we may add another color, yellow, for detecting the picking area. The correct detection of the yellow picking area can help the camera on the robot arm obtain the relative positions of the cubes on the picking area, and further calculate the coordinates at the world frame. As we have already calibrated before and get the parameters for the camera to locate the cube, using this method to detect the yellow area can average the error which makes the targeting more precise. 
 
 **Working procedure**
 There are two main tasks for the robot arm: color detection and sorting (picking and placing). First, the robot will enter `Hold` phase if there is no cube to be sorted. In `Hold` phase, the robot arm will hold with a specific attitude which allows the camera to capture the images of the full picking area. Color detection will occur at this phase, in which the sorting stacks containing the target positions for the arm will be filled if there are available target cubes. Then, if the cubes are detected, the arm will enter `Sort` phase, in which the detected cubes will be picked up and placed into the bins with the order of the colors red, green, and blue. 
