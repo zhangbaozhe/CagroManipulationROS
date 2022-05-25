@@ -7,6 +7,7 @@ import rospy, sys
 from object_color_detector.srv import DetectObjectSrv, DetectObjectSrvRequest, DetectObjectSrvResponse
 from object_color_detector.srv import PickPlaceSrv, PickPlaceSrvRequest, PickPlaceSrvResponse
 from geometry_msgs.msg import PoseStamped, Pose
+from std_msgs.msg import Float64
 import moveit_commander
 from math import pi
 
@@ -28,39 +29,41 @@ TARGET_POSITIONS = {
 
 HOLD_JOINTS = {
     'waist': 0 / 180 * pi, 
-    'shoulder': -29 / 180 * pi, 
-    'elbow': -36 / 180 * pi, 
+    'shoulder': -27 / 180 * pi, 
+    'elbow': -3 / 180 * pi, 
     'forearm_roll': 0, 
-    'wrist_angle': -83 / 180 * pi, 
+    'wrist_angle': -115 / 180 * pi, 
     'wrist_rotate': 0
 }
 
 RED_BUCKET_JOINTS = {
     'waist': 90 / 180 * pi, 
-    'shoulder': -26 / 180 * pi, 
-    'elbow': -38 / 180 * pi, 
+    'shoulder': -24 / 180 * pi, 
+    'elbow': -28 / 180 * pi, 
     'forearm_roll': 0, 
-    'wrist_angle': -77 / 180 * pi, 
+    'wrist_angle': -86 / 180 * pi, 
     'wrist_rotate': 0
 }
 
 BLUE_BUCKET_JOINTS = {
-    'waist': 120 / 180 * pi, 
-    'shoulder': -19 / 180 * pi, 
+    'waist': 115 / 180 * pi, 
+    'shoulder': -24 / 180 * pi, 
     'elbow': -33 / 180 * pi, 
     'forearm_roll': 0, 
-    'wrist_angle': -76 / 180 * pi, 
-    'wrist_rotate': 30 / 180 * pi
+    'wrist_angle': -86 / 180 * pi, 
+    'wrist_rotate': 0 / 180 * pi
 }
 
 GREEN_BUCKET_JOINTS = {
     'waist': 65 / 180 * pi, 
-    'shoulder': -21 / 180 * pi, 
-    'elbow': -35 / 180 * pi, 
+    'shoulder': -19 / 180 * pi, 
+    'elbow': -25 / 180 * pi, 
     'forearm_roll': 0, 
-    'wrist_angle': -76 / 180 * pi, 
-    'wrist_rotate': -25 / 180 * pi
+    'wrist_angle': -84 / 180 * pi, 
+    'wrist_rotate': -0 / 180 * pi
 }
+
+TARGET_Z = 0.085
 
 # If the three are all empty then arm will hold
 RED_OBJ_STACK = []
@@ -73,6 +76,9 @@ GRIPPER = 0
 REFERENCE_FRAME = 0
 END_EFFECTOR_LINK = 0
 
+# Global gripper pub
+GRIPPER_PUB = 0
+
 # Global detection service 
 OBJECT_COLOR_DETECT = 0
 
@@ -82,7 +88,7 @@ PICK_PLACE = 0
 
 
 def pickPlaceCallBack(req):
-    global ARM, GRIPPER
+    global ARM, GRIPPER, GRIPPER_PUB
 
     if req.color == 0:
         # move to the red bucket
@@ -102,7 +108,7 @@ def pickPlaceCallBack(req):
     target_pose = req.targetPose # a PoseStamped
 
     try: 
-
+        
         # set the current state as the start state
         ARM.set_start_state_to_current_state()
 
@@ -117,9 +123,11 @@ def pickPlaceCallBack(req):
         rospy.sleep(0.5)
 
         # close the gripper
-        GRIPPER.set_named_target('Closed')
-        GRIPPER.go()
+        # GRIPPER.set_named_target('Closed')
+        # GRIPPER.go()
+        GRIPPER_PUB.publish(Float64(-0.01))
         rospy.sleep(0.5)
+        # GRIPPER.clear_pose_targets()
 
         # go to hold position
         ARM.set_joint_value_target(HOLD_JOINTS)
@@ -132,8 +140,11 @@ def pickPlaceCallBack(req):
         rospy.sleep(0.5)
 
         # open the gripper
-        GRIPPER.set_named_target("Open")
-        GRIPPER.go()
+        # below will fail
+        # GRIPPER.set_named_target("Open")
+        # GRIPPER.go()
+        # open raw
+        GRIPPER_PUB.publish(Float64(-0.02))
         rospy.sleep(0.5)
 
         # reset 
@@ -155,7 +166,7 @@ def cameraPointTransformToWorld(x_cam, y_cam, x_yellow, y_yellow, width_yellow, 
 
 
 def timerCommandCallBack(event):
-    global TASK_STACK, ARM, GRIPPER
+    global TASK_STACK, ARM, GRIPPER, GRIPPER_PUB
     global OBJECT_COLOR_DETECT, PICK_PLACE
     global RED_OBJ_STACK, BLUE_OBJ_STACK, GREEN_OBJ_STACK
 
@@ -188,7 +199,7 @@ def timerCommandCallBack(event):
             temp_pose.header.stamp = rospy.Time.now()
             temp_pose.pose.position.x = x_world
             temp_pose.pose.position.y = y_world
-            temp_pose.pose.position.z = 0.075
+            temp_pose.pose.position.z = TARGET_Z
             temp_pose.pose.orientation.w = 0.7071068
             temp_pose.pose.orientation.y = 0.7071068
             RED_OBJ_STACK.append(temp_pose)
@@ -207,7 +218,7 @@ def timerCommandCallBack(event):
             temp_pose.header.stamp = rospy.Time.now()
             temp_pose.pose.position.x = x_world
             temp_pose.pose.position.y = y_world
-            temp_pose.pose.position.z = 0.075
+            temp_pose.pose.position.z = TARGET_Z
             temp_pose.pose.orientation.w = 0.7071068
             temp_pose.pose.orientation.y = 0.7071068
             GREEN_OBJ_STACK.append(temp_pose)
@@ -226,7 +237,7 @@ def timerCommandCallBack(event):
             temp_pose.header.stamp = rospy.Time.now()
             temp_pose.pose.position.x = x_world
             temp_pose.pose.position.y = y_world
-            temp_pose.pose.position.z = 0.075
+            temp_pose.pose.position.z = TARGET_Z
             temp_pose.pose.orientation.w = 0.7071068
             temp_pose.pose.orientation.y = 0.7071068
             BLUE_OBJ_STACK.append(temp_pose)
@@ -268,34 +279,10 @@ def timerCommandCallBack(event):
         TASK_STACK.pop()
         return
 
-        
-        
-
-
-
-
-
-
-
-
-
-    # pick_place = rospy.ServiceProxy('pick_place', PickPlaceSrv)
-    # target_pose = PoseStamped()
-    # target_pose.header.frame_id = REFERENCE_FRAME
-    # target_pose.header.stamp = rospy.Time.now()     
-    # target_pose.pose.position.x = 0.28
-    # target_pose.pose.position.y = 0
-    # target_pose.pose.position.z = 0.075
-    # target_pose.pose.orientation.w = 0.7071068
-    # target_pose.pose.orientation.y = 0.7071068
-
-    # target_color = 2
-
-    # pick_place(target_pose, target_color)
 
 
 def main():
-    global ARM, GRIPPER, REFERENCE_FRAME, END_EFFECTOR_LINK
+    global ARM, GRIPPER, GRIPPER_PUB, REFERENCE_FRAME, END_EFFECTOR_LINK
     global OBJECT_COLOR_DETECT, PICK_PLACE
 
     moveit_commander.roscpp_initialize(sys.argv)
@@ -320,19 +307,24 @@ def main():
     ARM.set_goal_orientation_tolerance(0.001)
     
     # set max velocity and accelation
-    ARM.set_max_acceleration_scaling_factor(1.0)
-    ARM.set_max_velocity_scaling_factor(1.0)
+    ARM.set_max_acceleration_scaling_factor(0.5)
+    ARM.set_max_velocity_scaling_factor(0.5)
 
     # set gripper error
     GRIPPER.set_goal_joint_tolerance(0.001)
 
     # set max velocity and acceleration
-    GRIPPER.set_max_acceleration_scaling_factor(1.0)
-    GRIPPER.set_max_velocity_scaling_factor(1.0)
+    GRIPPER.set_max_acceleration_scaling_factor(0.3)
+    GRIPPER.set_max_velocity_scaling_factor(0.3)
+
+    GRIPPER_PUB = rospy.Publisher('/wx250s/gripper/command', Float64, queue_size=1)
+    while GRIPPER_PUB.get_num_connections() < 1:
+        pass
 
     # open the gripper
-    GRIPPER.set_named_target('Open')
-    GRIPPER.go()
+    # GRIPPER.set_named_target('Open')
+    # GRIPPER.go()
+    GRIPPER_PUB.publish(Float64(-0.02))
     rospy.sleep(0.5)
 
     # go to hold position
@@ -345,7 +337,7 @@ def main():
     rospy.wait_for_service('pick_place')
     PICK_PLACE = rospy.ServiceProxy('pick_place', PickPlaceSrv)
 
-    rospy.Timer(rospy.Duration(1), timerCommandCallBack)
+    rospy.Timer(rospy.Duration(2), timerCommandCallBack)
     rospy.spin()
 
     moveit_commander.roscpp_shutdown()
