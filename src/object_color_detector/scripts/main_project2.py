@@ -18,6 +18,11 @@ TASK_STACK = []
 TASK_HOLD = 0
 TASK_SORT = 1
 
+K1 = 0
+K2 = 0
+B1 = 0
+B2 = 0
+
 TARGET_POSITIONS = {
     "A": (0.30, 0.00, 0.75),
     "B": (0.22, -0.10, 0.75),
@@ -34,6 +39,14 @@ HOLD_JOINTS = {
     'wrist_angle': -83 / 180 * pi, 
     'wrist_rotate': 0
 }
+
+HOLD_POSE = PoseStamped()
+HOLD_POSE.header.frame_id = 'world'
+HOLD_POSE.pose.position.x = 0.15
+HOLD_POSE.pose.position.y = 0.0
+HOLD_POSE.pose.position.z = 0.3
+HOLD_POSE.pose.orientation.y = 2**0.5/2.
+HOLD_POSE.pose.orientation.w = 2**0.5/2.
 
 RED_BUCKET_JOINTS = {
     'waist': 90 / 180 * pi, 
@@ -122,8 +135,14 @@ def pickPlaceCallBack(req):
         rospy.sleep(0.5)
 
         # go to hold position
-        ARM.set_joint_value_target(HOLD_JOINTS)
-        ARM.go()
+        # ARM.set_joint_value_target(HOLD_JOINTS)
+        # ARM.go()
+        # set the pose of the end effector
+        ARM.set_pose_target(HOLD_POSE, END_EFFECTOR_LINK)
+        # plan 
+        plan_success, traj, planning_time, error_code = ARM.plan()
+        # move
+        ARM.execute(traj)
         rospy.sleep(0.5)
 
         # move to the bucket 
@@ -137,8 +156,14 @@ def pickPlaceCallBack(req):
         rospy.sleep(0.5)
 
         # reset 
-        ARM.set_joint_value_target(HOLD_JOINTS)
-        ARM.go()
+        # ARM.set_joint_value_target(HOLD_JOINTS)
+        # ARM.go()
+        # set the pose of the end effector
+        ARM.set_pose_target(HOLD_POSE, END_EFFECTOR_LINK)
+        # plan 
+        plan_success, traj, planning_time, error_code = ARM.plan()
+        # move
+        ARM.execute(traj)
         rospy.sleep(0.5)
 
         return PickPlaceSrvResponse(True)
@@ -149,7 +174,9 @@ def cameraPointTransformToWorld(x_cam, y_cam, x_yellow, y_yellow, width_yellow, 
     # transform from the camera pixel to the real world coordinates
     y_world = 0.15 - (x_cam - x_yellow) / width_yellow * 0.3
     x_world = 0.31 - (y_cam - y_yellow) / height_yellow * 0.18
-    return (x_world, y_world)
+    y_temp = K2 * x_cam + B2
+    x_temp = K1 * y_cam + B1
+    return ((x_world+x_temp)/2, (y_world+y_temp)/2)
 
 
 
@@ -194,6 +221,8 @@ def timerCommandCallBack(event):
             RED_OBJ_STACK.append(temp_pose)
 
         for pose in res.greenObjList:
+            if pose.position.x < 100:
+                continue
             x_world, y_world = \
                 cameraPointTransformToWorld(
                     pose.position.x, 
@@ -297,9 +326,16 @@ def timerCommandCallBack(event):
 def main():
     global ARM, GRIPPER, REFERENCE_FRAME, END_EFFECTOR_LINK
     global OBJECT_COLOR_DETECT, PICK_PLACE
+    global K1, K2, B1, B2
 
     moveit_commander.roscpp_initialize(sys.argv)
     rospy.init_node("warehouse_sort")
+
+    K1 = rospy.get_param("/image/reg_x/K1")
+    B1 = rospy.get_param("/image/reg_x/B1")
+    K2 = rospy.get_param("/image/reg_y/K2")
+    B2 = rospy.get_param("/image/reg_y/B2")
+
     ARM = moveit_commander.MoveGroupCommander("interbotix_arm")
     GRIPPER = moveit_commander.MoveGroupCommander("interbotix_gripper")
 
@@ -336,8 +372,14 @@ def main():
     rospy.sleep(0.5)
 
     # go to hold position
-    ARM.set_joint_value_target(HOLD_JOINTS)
-    ARM.go()
+    # ARM.set_joint_value_target(HOLD_JOINTS)
+    # ARM.go()
+    # set the pose of the end effector
+    ARM.set_pose_target(HOLD_POSE, END_EFFECTOR_LINK)
+    # plan 
+    plan_success, traj, planning_time, error_code = ARM.plan()
+    # move
+    ARM.execute(traj)
     rospy.sleep(0.5)
 
     pick_place_service = rospy.Service('pick_place', PickPlaceSrv, pickPlaceCallBack)
