@@ -148,12 +148,16 @@ def pickPlaceCallBack(req):
         # ARM.set_joint_value_target(HOLD_JOINTS)
         # ARM.go()
         # set the pose of the end effector
-        ARM.set_pose_target(HOLD_POSE, END_EFFECTOR_LINK)
+        # ARM.set_pose_target(HOLD_POSE, END_EFFECTOR_LINK)
         # plan 
-        plan_success, traj, planning_time, error_code = ARM.plan()
+        # plan_success, traj, planning_time, error_code = ARM.plan()
         # move
+        # rospy.sleep(0.5)
+        ARM.set_named_target("Home")
+        ARM.go()
         rospy.sleep(0.5)
 
+        
         # move to the bucket 
         ARM.set_joint_value_target(target_joints)
         ARM.go()
